@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuestionGenius </title>
+    
+    <!-- Enhanced styling with modern UI libraries -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+    
+    <!-- Advanced processing libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tensorflow/4.10.0/tf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chart.js/3.7.0/chart.min.js"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <!-- Modern Navigation Bar with Theme Toggle and Back Button -->
+<nav class="bg-white shadow-lg sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 py-3">
+        <div class="flex justify-between items-center">
+            <!-- Logo and Title -->
+            <div class="flex items-center space-x-4">
+                <i class="fas fa-brain text-indigo-600 text-2xl"></i>
+                <span class="text-xl font-bold text-gray-800">Advanced AI Question Generator Pro</span>
+            </div>
+            <!-- Navigation Buttons -->
+            <div class="flex items-center space-x-4">
+                <!-- Back Button with Link -->
+                <a href="index.html" class="p-2 rounded-full hover:bg-gray-100">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <!-- Theme Toggle -->
+                <button id="themeToggle" class="p-2 rounded-full hover:bg-gray-100">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <!-- Help Button -->
+                <button id="helpBtn" class="p-2 rounded-full hover:bg-gray-100">
+                    <i class="fas fa-question-circle"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</nav>
+
+
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        <!-- Dashboard Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            <div class="bg-white rounded-lg shadow p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500">Documents Processed</p>
+                        <h3 class="text-2xl font-bold" id="docsProcessed">0</h3>
+                    </div>
+                    <i class="fas fa-file-alt text-indigo-500 text-3xl"></i>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500">Questions Generated</p>
+                        <h3 class="text-2xl font-bold" id="questionsGenerated">0</h3>
+                    </div>
+                    <i class="fas fa-question-circle text-green-500 text-3xl"></i>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500">Processing Time</p>
+                        <h3 class="text-2xl font-bold" id="avgProcessingTime">0s</h3>
+                    </div>
+                    <i class="fas fa-clock text-blue-500 text-3xl"></i>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500">AI Accuracy</p>
+                        <h3 class="text-2xl font-bold" id="aiAccuracy">95%</h3>
+                    </div>
+                    <i class="fas fa-bullseye text-red-500 text-3xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="bg-white rounded-lg shadow-lg">
+            <!-- Tabs Navigation -->
+            <div class="border-b border-gray-200">
+                <nav class="flex -mb-px">
+                    <button class="tab-btn active px-6 py-3 border-b-2 border-indigo-500 text-indigo-600 font-medium" data-tab="upload">
+                        <i class="fas fa-upload mr-2"></i>Upload
+                    </button>
+                    <button class="tab-btn px-6 py-3 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium" data-tab="settings">
+                        <i class="fas fa-cog mr-2"></i>Settings
+                    </button>
+                    <button class="tab-btn px-6 py-3 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium" data-tab="analytics">
+                        <i class="fas fa-chart-bar mr-2"></i>Analytics
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Tab Content -->
+            <div class="p-6">
+                <!-- Upload Tab -->
+                <div id="uploadTab" class="tab-content">
+                    <div id="dropZone" class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-indigo-500 transition-colors">
+                        <input type="file" id="fileInput" class="hidden" accept=".pdf,.doc,.docx,.txt">
+                        <i class="fas fa-cloud-upload-alt text-4xl text-indigo-500 mb-4"></i>
+                        <h3 class="text-lg font-semibold mb-2">Drag & Drop or Click to Upload</h3>
+                        <p class="text-gray-500">Supported formats: PDF, DOC, DOCX, TXT</p>
+                        <div id="fileInfo" class="mt-4 text-gray-600 hidden">
+                            <div class="flex items-center justify-center mb-2">
+                                <i class="fas fa-file-alt mr-2"></i>
+                                <span id="fileName"></span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div id="progressBar" class="bg-indigo-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Advanced Options -->
+                    <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="space-y-4">
+                            <h3 class="text-lg font-semibold">Question Types</h3>
+                            <div class="space-y-3">
+                                <label class="flex items-center">
+                                    <input type="checkbox" class="form-checkbox text-indigo-600" checked name="questionType" value="mcq">
+                                    <span class="ml-2">Multiple Choice</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" class="form-checkbox text-indigo-600" checked name="questionType" value="shortAnswer">
+                                    <span class="ml-2">Short Answer</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" class="form-checkbox text-indigo-600" checked name="questionType" value="trueFalse">
+                                    <span class="ml-2">True/False</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" class="form-checkbox text-indigo-600" name="questionType" value="matching">
+                                    <span class="ml-2">Matching</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" class="form-checkbox text-indigo-600" name="questionType" value="fillBlanks">
+                                    <span class="ml-2">Fill in the Blanks</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="space-y-4">
+                            <h3 class="text-lg font-semibold">AI Model Settings</h3>
+                            <div class="space-y-3">
+                                <label class="flex items-center">
+                                    <input type="radio" class="form-radio text-indigo-600" name="aiModel" value="gpt" checked>
+                                    <span class="ml-2">GPT-4 (Recommended)</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="radio" class="form-radio text-indigo-600" name="aiModel" value="bert">
+                                    <span class="ml-2">BERT</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="radio" class="form-radio text-indigo-600" name="aiModel" value="t5">
+                                    <span class="ml-2">T5-Large</span>
+                                </label>
+                            </div>
+                            
+                            <div class="mt-4">
+                                <label class="block text-sm font-medium text-gray-700">Processing Speed</label>
+                                <input type="range" min="1" max="3" value="2" class="w-full mt-2" id="speedSlider">
+                                <div class="flex justify-between text-sm text-gray-500">
+                                    <span>Accurate</span>
+                                    <span>Balanced</span>
+                                    <span>Fast</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-4">
+                            <h3 class="text-lg font-semibold">Advanced Features</h3>
+                            <div class="space-y-3">
+                                <label class="flex items-center">
+                                    <input type="checkbox" class="form-checkbox text-indigo-600" checked name="features" value="autoGrade">
+                                    <span class="ml-2">Auto-Grading</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" class="form-checkbox text-indigo-600" checked name="features" value="difficulty">
+                                    <span class="ml-2">Difficulty Levels</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" class="form-checkbox text-indigo-600" name="features" value="hints">
+                                    <span class="ml-2">Include Hints</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" class="form-checkbox text-indigo-600" name="features" value="explanations">
+                                    <span class="ml-2">Detailed Explanations</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" class="form-checkbox text-indigo-600" name="features" value="topics">
+                                    <span class="ml-2">Topic Tagging</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Generate Button -->
+                    <button id="generateBtn" class="w-full mt-8 bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>
+                        <i class="fas fa-magic mr-2"></i>Generate Questions
+                    </button>
+                </div>
+
+                <!-- Settings Tab -->
+                <div id="settingsTab" class="tab-content hidden">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <!-- Output Settings -->
+                        <div class="space-y-6">
+                            <h3 class="text-xl font-semibold">Output Settings</h3>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Export Format</label>
+                                <select class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                    <option value="pdf">PDF Document</option>
+                                    <option value="docx">Word Document</option>
+                                    <option value="txt">Plain Text</option>
+                                    <option value="json">JSON Format</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Question Density</label>
+                                <input type="range" min="1" max="5" value="3" class="w-full mt-2">
+                                <div class="flex justify-between text-sm text-gray-500">
+                                    <span>Less</span>
+                                    <span>More</span>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Language</label>
+                                <select class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                    <option value="en">English</option>
+                                    <option value="es">Spanish</option>
+                                    <option value="fr">French</option>
+                                    <option value="de">German</option>
+                                    <option value="zh">Chinese</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- AI Settings -->
+                        <div class="space-y-6">
+                            <h3 class="text-xl font-semibold">AI Settings</h3>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Question Complexity</label>
+                                <div class="mt-2 space-y-2">
+                                    <label class="flex items-center">
+                                        <input type="checkbox" class="form-checkbox text-indigo-600" checked>
+                                        <span class="ml-2">Basic Recall</span>
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" class="form-checkbox text-indigo-600" checked>
+                                        <span class="ml-2">Critical Thinking</span>
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" class="form-checkbox text-indigo-600" checked>
+                                        <span class="ml-2">Application</span>
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" class="form-checkbox text-indigo-600">
+                                        <span class="ml-2">Analysis & Synthesis</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">AI Processing Mode</label>
+                                <select class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                    <option value="balanced">Balanced (Recommended)</option>
+                                    <option value="speed">Speed Optimized</option>
+                                    <option value="quality">Quality Optimized</option>
+                                    <option value="memory">Memory Optimized</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Custom Rules</label>
+                                <textarea class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" rows="3" placeholder="Enter custom processing rules..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Analytics Tab -->
+                <div id="analyticsTab" class="tab-content hidden">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <!-- Processing Statistics -->
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-xl font-semibold mb-4">Processing Statistics</h3>
+                            <canvas id="processingChart"></canvas>
+                        </div>
+
+                        <!-- Question Distribution -->
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-xl font-semibold mb-4">Question Distribution</h3>
+                            <canvas id="distributionChart"></canvas>
+                        </div>
+
+                        <!-- Recent Activity -->
+                        <div class="col-span-2 bg-white rounded-lg shadow p-6">
+                            <h3 class="text-xl font-semibold mb-4">Recent Activity</h3>
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead>
+                                        <tr>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Document</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Questions</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-gray-200" id="activityLog">
+                                        <!-- Activity logs will be inserted here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="results" class="mt-8 bg-white rounded-lg shadow-lg p-6 hidden">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-semibold">Generated Questions</h3>
+                <div class="space-x-2">
+                    <button id="previewBtn" class="px-4 py-2 bg-gray-100 rounded hover:bg-gray-200 transition-colors">
+                        <i class="fas fa-eye mr-2"></i>Preview
+                    </button>
+                    <button id="copyBtn" class="px-4 py-2 bg-gray-100 rounded hover:bg-gray-200 transition-colors">
+                        <i class="fas fa-copy mr-2"></i>Copy
+                    </button>
+                    <button id="downloadBtn" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition-colors">
+                        <i class="fas fa-download mr-2"></i>Download
+                    </button>
+                </div>
+            </div>
+            <div id="questionsList" class="space-y-6"></div>
+        </div>
+    </main>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+        <div class="bg-white p-8 rounded-lg shadow-xl text-center max-w-md w-full mx-4">
+            <div class="animate-spin rounded-full h-12 w-12 border-4 border-indigo-600 border-t-transparent mx-auto mb-4"></div>
+            <p class="text-lg font-semibold mb-2">Processing Document</p>
+            <p id="processingStatus" class="text-gray-600">Initializing AI models...</p>
+            <div class="mt-4 bg-gray-200 rounded-full h-2">
+                <div id="processingProgress" class="bg-indigo-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Preview Modal -->
+    <div id="previewModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="fixed inset-0 flex items-center justify-center p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+                <div class="p-6 border-b border-gray-200 flex justify-between items-center">
+                    <h3 class="text-xl font-semibold">Question Preview</h3>
+                    <button id="closePreviewBtn" class="text-gray-400 hover:text-gray-500">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="p-6 overflow-y-auto" id="previewContent">
+                    <!-- Preview content will be inserted here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Modal -->
+    <div id="helpModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="fixed inset-0 flex items-center justify-center p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
+                <div class="p-6 border-b border-gray-200 flex justify-between items-center">
+                    <h3 class="text-xl font-semibold">Help & Documentation</h3>
+                    <button id="closeHelpBtn" class="text-gray-400 hover:text-gray-500">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="p-6 overflow-y-auto">
+                    <div class="space-y-6">
+                        <div>
+                            <h4 class="font-semibold text-lg mb-2">Getting Started</h4>
+                            <p class="text-gray-600">Upload your document using the drag & drop area or file selector. Supported formats include PDF, DOC, DOCX, and TXT files.</p>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-lg mb-2">Question Types</h4>
+                            <ul class="list-disc list-inside text-gray-600 space-y-2">
+                                <li>Multiple Choice: Traditional format with one correct answer</li>
+                                <li>Short Answer: Free-form responses</li>
+                                <li>True/False: Binary choice questions</li>
+                                <li>Matching: Pair related items</li>
+                                <li>Fill in the Blanks: Complete missing words</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-lg mb-2">AI Models</h4>
+                            <p class="text-gray-600">Choose between different AI models based on your needs:</p>
+                            <ul class="list-disc list-inside text-gray-600 space-y-2">
+                                <li>GPT-4: Best for natural language understanding</li>
+                                <li>BERT: Optimized for technical content</li>
+                                <li>T5-Large: Balanced performance</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize all charts
+        function initializeCharts() {
+            // Processing Statistics Chart
+            const processingCtx = document.getElementById('processingChart').getContext('2d');
+            new Chart(processingCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [{
+                        label: 'Processing Time (s)',
+                        data: [2.1, 1.8, 2.4, 1.9, 2.2, 1.7, 2.0],
+                        borderColor: 'rgb(79, 70, 229)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+
+            // Question Distribution Chart
+            const distributionCtx = document.getElementById('distributionChart').getContext('2d');
+            new Chart(distributionCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Multiple Choice', 'Short Answer', 'True/False', 'Matching', 'Fill Blanks'],
+                    datasets: [{
+                        data: [35, 25, 20, 12, 8],
+                        backgroundColor: [
+                            'rgb(79, 70, 229)',
+                            'rgb(59, 130, 246)',
+                            'rgb(16, 185, 129)',
+                            'rgb(245, 158, 11)',
+                            'rgb(239, 68, 68)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        // Tab switching functionality
+        function initializeTabs() {
+            const tabBtns = document.querySelectorAll('.tab-btn');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            tabBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const tabId = btn.dataset.tab;
+                    
+                    // Update button states
+                    tabBtns.forEach(b => {
+                        b.classList.remove('border-indigo-500', 'text-indigo-600');
+                        b.classList.add('border-transparent', 'text-gray-500');
+                    });
+                    btn.classList.add('border-indigo-500', 'text-indigo-600');
+                    btn.classList.remove('border-transparent', 'text-gray-500');
+                    
+                    // Update content visibility
+                    tabContents.forEach(content => {
+                        content.classList.add('hidden');
+                    });
+                    document.getElementById(`${tabId}Tab`).classList.remove('hidden');
+
+                    // Initialize charts if showing analytics tab
+                    if (tabId === 'analytics') {
+                        initializeCharts();
+                    }
+                });
+            });
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeTabs();
+            setupFileUpload();
+            setupModalHandlers();
+            setupThemeToggle();
+            updateActivityLog();
+        });
+
+        // File upload functionality
+        function setupFileUpload() {
+            const dropZone = document.getElementById('dropZone');
+            const fileInput = document.getElementById('fileInput');
+            const generateBtn = document.getElementById('generateBtn');
+            
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('border-indigo-500');
+            });
+
+            dropZone.addEventListener('dragleave', () => {
+                dropZone.classList.remove('border-indigo-500');
+            });
+
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                const file = e.dataTransfer.files[0];
+                handleFileUpload(file);
+            });
+
+            dropZone.addEventListener('click', () => {
+                fileInput.click();
+            });
+
+            fileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                handleFileUpload(file);
+            });
+        }
+
+        // Handle file upload
+        function handleFileUpload(file) {
+            if (!file) return;
+
+            const validTypes = [
+                'application/pdf',
+                'application/msword',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                'text/plain'
+            ];
+
+            if (!validTypes.includes(file.type)) {
+                showToast('Please upload a supported file format', 'error');
+                return;
+            }
+
+            // Update UI
+            document.getElementById('fileName').textContent = file.name;
+            document.getElementById('fileInfo').classList.remove('hidden');
+            document.getElementById('generateBtn').disabled = false;
+
+            // Simulate upload progress
+            simulateUploadProgress();
+        }
+
+        // Simulate upload progress
+        function simulateUploadProgress() {
+            const progressBar = document.getElementById('progressBar');
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 5;
+                progressBar.style.width = `${progress}%`;
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    showToast('File uploaded successfully', 'success');
+                }
+            }, 100);
+        }
+
+        // Modal handlers
+        function setupModalHandlers() {
+            // Preview Modal
+            document.getElementById('previewBtn')?.addEventListener('click', () => {
+                document.getElementById('previewModal').classList.remove('hidden');
+            });
+
+            document.getElementById('closePreviewBtn')?.addEventListener('click', () => {
+                document.getElementById('previewModal').classList.add('hidden');
+            });
+
+            // Help Modal
+            // Help Modal
+            document.getElementById('helpBtn').addEventListener('click', () => {
+                document.getElementById('helpModal').classList.remove('hidden');
+            });
+
+            document.getElementById('closeHelpBtn').addEventListener('click', () => {
+                document.getElementById('helpModal').classList.add('hidden');
+            });
+        }
+
+        // Theme toggle functionality
+        function setupThemeToggle() {
+            const themeToggle = document.getElementById('themeToggle');
+            const icon = themeToggle.querySelector('i');
+            let isDark = false;
+
+            themeToggle.addEventListener('click', () => {
+                isDark = !isDark;
+                document.documentElement.classList.toggle('dark');
+                icon.classList.toggle('fa-moon');
+                icon.classList.toggle('fa-sun');
+            });
+        }
+
+        // Activity log updates
+        function updateActivityLog() {
+            const activityLog = document.getElementById('activityLog');
+            const sampleActivities = [
+                {
+                    time: '2 mins ago',
+                    document: 'Chapter 5 - Biology.pdf',
+                    questions: 25,
+                    status: 'Completed'
+                },
+                {
+                    time: '15 mins ago',
+                    document: 'History Notes.docx',
+                    questions: 30,
+                    status: 'Completed'
+                },
+                {
+                    time: '1 hour ago',
+                    document: 'Physics Lab Report.pdf',
+                    questions: 15,
+                    status: 'Completed'
+                }
+            ];
+
+            activityLog.innerHTML = sampleActivities.map(activity => `
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${activity.time}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${activity.document}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${activity.questions}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                            ${activity.status}
+                        </span>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Toast notification system
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            const colors = {
+                info: 'bg-blue-500',
+                success: 'bg-green-500',
+                error: 'bg-red-500',
+                warning: 'bg-yellow-500'
+            };
+
+            toast.className = `fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg text-white ${colors[type]} transform transition-all duration-300 translate-y-0 opacity-100`;
+            toast.textContent = message;
+
+            document.body.appendChild(toast);
+
+            // Animate in
+            requestAnimationFrame(() => {
+                toast.style.transform = 'translateY(0)';
+                toast.style.opacity = '1';
+            });
+
+            // Remove after 3 seconds
+            setTimeout(() => {
+                toast.style.transform = 'translateY(20px)';
+                toast.style.opacity = '0';
+                setTimeout(() => {
+                    document.body.removeChild(toast);
+                }, 300);
+            }, 3000);
+        }
+
+        // Question generation and processing
+        async function generateQuestions() {
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const processingStatus = document.getElementById('processingStatus');
+            const processingProgress = document.getElementById('processingProgress');
+
+            try {
+                loadingOverlay.classList.remove('hidden');
+                
+                // Simulate processing stages
+                const stages = [
+                    { message: 'Initializing AI models...', duration: 1000 },
+                    { message: 'Analyzing document content...', duration: 2000 },
+                    { message: 'Generating questions...', duration: 2500 },
+                    { message: 'Applying quality checks...', duration: 1500 },
+                    { message: 'Finalizing results...', duration: 1000 }
+                ];
+
+                let progressValue = 0;
+                for (const stage of stages) {
+                    processingStatus.textContent = stage.message;
+                    await animateProgress(progressValue, progressValue + 20);
+                    progressValue += 20;
+                    await new Promise(resolve => setTimeout(resolve, stage.duration));
+                }
+
+                // Update stats
+                updateStats();
+                
+                // Display results
+                displayResults();
+
+            } catch (error) {
+                showToast('Error generating questions: ' + error.message, 'error');
+            } finally {
+                loadingOverlay.classList.add('hidden');
+            }
+        }
+
+        // Progress bar animation
+        async function animateProgress(start, end) {
+            const processingProgress = document.getElementById('processingProgress');
+            const duration = 500;
+            const steps = 20;
+            const increment = (end - start) / steps;
+            
+            for (let i = 0; i <= steps; i++) {
+                const progress = start + (increment * i);
+                processingProgress.style.width = `${progress}%`;
+                await new Promise(resolve => setTimeout(resolve, duration / steps));
+            }
+        }
+
+        // Update dashboard statistics
+        function updateStats() {
+            const stats = {
+                docsProcessed: parseInt(document.getElementById('docsProcessed').textContent) + 1,
+                questionsGenerated: parseInt(document.getElementById('questionsGenerated').textContent) + Math.floor(Math.random() * 20) + 10,
+                avgProcessingTime: ((Math.random() * 1) + 1.5).toFixed(1)
+            };
+
+            document.getElementById('docsProcessed').textContent = stats.docsProcessed;
+            document.getElementById('questionsGenerated').textContent = stats.questionsGenerated;
+            document.getElementById('avgProcessingTime').textContent = `${stats.avgProcessingTime}s`;
+        }
+
+        // Display generated questions
+        function displayResults() {
+            const results = document.getElementById('results');
+            const questionsList = document.getElementById('questionsList');
+            
+            // Sample generated questions
+            const questions = generateSampleQuestions();
+            
+            questionsList.innerHTML = questions.map((q, index) => `
+                <div class="p-4 bg-gray-50 rounded-lg">
+                    <div class="flex justify-between items-start mb-4">
+                        <h4 class="text-lg font-semibold">Question ${index + 1}</h4>
+                        <span class="px-2 py-1 text-sm rounded bg-indigo-100 text-indigo-800">${q.type}</span>
+                    </div>
+                    <p class="mb-4">${q.question}</p>
+                    ${renderQuestionContent(q)}
+                </div>
+            `).join('');
+
+            results.classList.remove('hidden');
+        }
+
+        // Generate sample questions
+        function generateSampleQuestions() {
+            return [
+                {
+                    type: 'Multiple Choice',
+                    question: 'What is the main concept discussed in the first paragraph?',
+                    options: ['Option A', 'Option B', 'Option C', 'Option D'],
+                    correct: 0
+                },
+                {
+                    type: 'Short Answer',
+                    question: 'Explain the relationship between the key elements mentioned in the text.',
+                },
+                {
+                    type: 'True/False',
+                    question: 'The document suggests that the process is reversible.',
+                    correct: true
+                },
+                {
+                    type: 'Matching',
+                    question: 'Match the following terms with their definitions:',
+                    pairs: [
+                        { term: 'Term 1', definition: 'Definition 1' },
+                        { term: 'Term 2', definition: 'Definition 2' },
+                        { term: 'Term 3', definition: 'Definition 3' }
+                    ]
+                }
+            ];
+        }
+
+        // Render different question types
+        function renderQuestionContent(question) {
+            switch (question.type) {
+                case 'Multiple Choice':
+                    return `
+                        <div class="space-y-2 ml-4">
+                            ${question.options.map((option, i) => `
+                                <label class="flex items-center">
+                                    <input type="radio" name="q${question.index}" value="${i}" class="mr-2">
+                                    <span>${option}</span>
+                                </label>
+                            `).join('')}
+                        </div>
+                    `;
+                
+                case 'Short Answer':
+                    return `
+                        <textarea class="w-full p-2 border rounded-lg" rows="3" placeholder="Enter your answer..."></textarea>
+                    `;
+                
+                case 'True/False':
+                    return `
+                        <div class="space-x-4 ml-4">
+                            <label class="inline-flex items-center">
+                                <input type="radio" name="q${question.index}" value="true" class="mr-2">
+                                <span>True</span>
+                            </label>
+                            <label class="inline-flex items-center">
+                                <input type="radio" name="q${question.index}" value="false" class="mr-2">
+                                <span>False</span>
+                            </label>
+                        </div>
+                    `;
+                
+                case 'Matching':
+                    return `
+                        <div class="grid grid-cols-2 gap-4 ml-4">
+                            ${question.pairs.map(pair => `
+                                <div class="p-2 bg-white rounded border">${pair.term}</div>
+                                <div class="p-2 bg-white rounded border">${pair.definition}</div>
+                            `).join('')}
+                        </div>
+                    `;
+                
+                default:
+                    return '';
+            }
+        }
+
+        // Initialize event listeners
+        document.getElementById('generateBtn').addEventListener('click', generateQuestions);
+    </script>
+</body>
+</html>
