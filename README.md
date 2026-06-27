@@ -54,7 +54,7 @@
 
 <br/>
 
-**[⚡ Live Demo](https://questiongenius.vercel.app)** · **[📖 Try the App](https://questiongenius.vercel.app/try)** · **[🐛 Report Bug](https://github.com/yourusername/questiongenius/issues)** · **[💡 Request Feature](https://github.com/yourusername/questiongenius/issues)**
+**[⚡ Live Demo](https://questiongenius-vercel-fixed.vercel.app/)** · **[📖 Try the App](https://questiongenius.vercel.app/try)** · **[🐛 Report Bug](https://github.com/yourusername/questiongenius/issues)** · **[💡 Request Feature](https://github.com/yourusername/questiongenius/issues)**
 
 <br/>
 
